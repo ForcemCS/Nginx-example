@@ -1,0 +1,8 @@
+server {
+       listen 86  ;
+       listen [::]:86;
+       location / {
+	       proxy_pass http://webserver;
+               try_files $uri $uri/ =404;
+       }
+}

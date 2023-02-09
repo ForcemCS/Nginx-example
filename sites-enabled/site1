@@ -1,0 +1,120 @@
+server {
+	listen 82;
+	root    /opt/test1;
+	location ^~ /test {
+		rewrite ^/test/(.*)$ /test2/$1 last;   #值为last时，$1不起作用，接着往下寻找
+	}
+	#location /test2 {
+	#	add_header Content-Type text/plain;
+	#	echo test;
+	#}
+	location / {
+		root /var/www/site1;
+		rewrite ^/(.*)$   https://12.0.0.2/$1  redirect; #302
+	}
+
+}
+server {
+	listen 83;
+	server_name www.wukui.net;
+	root   /var/www/net;
+	error_page 404 =200 /404.html;
+	#add_header X_Via $server_addr;
+	add_header X_Cache $upstream_cache_status;
+        proxy_cache my-cache;
+        proxy_cache_key $request_uri;
+        proxy_cache_valid 200 301 302 3041h;
+        proxy_cache_valid any 1h;
+	proxy_hide_header Etag;
+
+	location / {
+                #proxy_cache my-cache;
+                #proxy_cache_key $request_uri;
+                #proxy_cache_valid 200 301 302 1h;
+                #proxy_cache_valid any 1m;
+		proxy_pass https://www.wukui.com;
+		proxy_set_header X_Real_IP $remote_addr;
+		proxy_set_header  X_Forwarded_For $proxy_add_x_forwarded_for;
+
+	}
+}
+server {
+	access_log  /var/www/site1/site1.log  json_combined;
+	gzip on;
+        gzip_min_length 1k;
+        gzip_vary on;      
+        gzip_comp_level 2; 
+        gzip_proxied any;  
+        gzip_types text/css text/xml application/javascript;
+
+	listen      443 ssl;
+	listen      84;
+	server_name www.wukui.com;
+	root        /var/www/site1;
+        ssl_certificate      /opt/nginx.crt;
+        ssl_certificate_key  /opt/nginx.key;
+        ssl_session_cache    shared:SSL:20m;
+        ssl_session_timeout  20m;
+	limit_rate             10000k;     #限制响应给客户端的速i率
+	error_page 404 =200 /404.html;  #不存在的页面是，返回的状态码是200，但是还是用的404错误页面
+		location = /40x.html {
+		}
+	location / {
+		access_log  /var/www/site1/site1.txt  json_combined;
+		#if ( !-e  $request_filename ) {                    #若URL的站点不存在，则执行跳转
+		#	rewrite ^/(.*)$    http://12.0.0.2:84  redirect;
+
+		#}
+		#if ($scheme = http ) {
+		#	rewrite ^/(.*)$   https://12.0.0.2/$1  redirect;
+	       
+		#}
+		limit_except GET OPTIONS  {
+			allow 12.0.0.2;   #所有的方法都允许
+			#deny all;         #除了GET  OPTIONS其他的方法都禁止,都是按照次序执行
+		}
+	}
+	location   /image/ {
+		valid_referers  none  blocked  server_names *.wukui.com ~\.google\. ~\.baidu\.;
+		if ($invalid_referer) {
+			return 403;
+		}
+		autoindex on;
+		alias /var/www/site1;
+		try_files $uri $uri/ /image/2.png =404 ; #curl www.wukui.com:82/image/1.png 先匹配/image/1.png 其次匹配/image/1.png/index.html，再匹配/image/2.png
+	}	
+	location  ^~ /test {
+		root    /opt/test1;
+		index   index.html;
+	}
+        #location /admin {
+	#	alias /var/www/site1;
+	#	allow 12.0.0.0/24:
+	        #deny all;
+	#	auth_basic "Admin Area";
+        #        auth_basic_user_file /etc/nginx/conf.d/nginx_pd;   #htpasswd -bc  nginx_pd  wukui wukui731
+	#}	
+	location /nginx_status {       #可以通过ab -c100 -n 2000 http://www.wukui.com:82/test.img测试
+		stub_status;
+		allow 12.0.0.0/24;
+		deny all;
+	}
+	location /echo {
+		add_header Content-Type text/plain; 
+		echo  $remote_addr;   #存放了客户端的公网地址
+	        echo  $args; #http://12.0.0.2:82/echo/sjjsdsj?=/bin/sq   输出的值为?=/bin/sq
+		echo  $document_root; #网站的主目录
+		echo  $http_user_agent;
+		echo  $request_method;
+		echo  $http_cookie;
+	}
+	location /download/ {
+		root  /var/www/site1;
+		autoindex on;
+	}
+	#location  ~*  \.(gif|jpg|png|js|css)$ {
+	#	root    /opt/static;
+	#}
+
+
+}
