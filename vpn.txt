@@ -1,0 +1,9 @@
+Go to the app settings, and make the changes:
+From the upper right corner Gear icon - Protocol - Choose OpenVPN+TCP+Scramble enabled
+Choose any server below to connect:
+Tokyo, Japan
+Montreal, Canada
+Tallinn, Estonia 
+Guadalajara, Mexico  
+Warsaw, Poland
+San Francisco, USA
