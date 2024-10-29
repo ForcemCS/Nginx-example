@@ -16,3 +16,6 @@ xFh5kTARjr
 VsATzvRSAd
 
 MISSEDBUNDLE
+
+#oracle
+Hidden@123#!
