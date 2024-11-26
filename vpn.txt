@@ -19,3 +19,6 @@ MISSEDBUNDLE
 
 #oracle
 Hidden@123#!
+
+#coursera
+A#%3-H48FK$@
