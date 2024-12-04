@@ -30,4 +30,29 @@ A#%3-H48FK$@
 Hidden@123#!
 #redhat
 HiddenLV@123#!
+-----------------------------------
+sudo apt install ca-certificates curl openssh-server postfix tzdata perl
 
+curl -LO https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh
+
+sudo bash /tmp/script.deb.sh
+
+external_url 'https://your_domain'
+
+
+nginx['enable'] = true
+nginx['client_max_body_size'] = '2048m'
+nginx['redirect_http_to_https'] = true
+nginx['redirect_http_to_https_port'] = 80
+
+nginx['ssl_certificate'] = "/usr/local/certs/gitlab/xxxx.crt"
+nginx['ssl_certificate_key'] = "/usr/local/certs/gitlab/xxxxxxx.key"
+
+
+
+git_data_dirs({
+  "default" => {
+    "path" => "/var/opt/gitlab/git-data"
+   },
+  "alternative" => { "path" => "/var/opt/data/gitlab" }
+})
